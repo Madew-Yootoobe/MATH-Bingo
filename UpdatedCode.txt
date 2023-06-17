@@ -1,0 +1,217 @@
+#include <iostream>     // std::cout  
+#include <algorithm>    // std::shuffle  
+#include <array>        // std::array  
+#include <random>       // std::default_random_engine  
+#include <chrono>       // std::chrono::system_clock  
+#include <fstream>	// for writing to a file
+#include <time.h>       
+
+using namespace std;
+int iterations = 100 ;
+array<int, 50> numbers;
+array<int, 25> bingosheet;
+array<int, 25> numberscalledout;
+array<bool, 25> hitsheet;
+array<bool, 12> lines;
+int shaded = 0;
+int bingos = 0;
+double probability = 0;
+
+int main()
+
+{
+	ofstream fileout("output.txt");
+	//ofstream filestream("hitlines.txt");
+	//ofstream filestream2("nos_shaded.txt");
+	ofstream bingo("bingos.csv");
+
+	cout << "please enter the number of iterations: "; cin >> iterations; cout << endl;
+	fileout << "please enter the number of iterations: "; fileout << iterations; fileout << endl;
+
+
+	double start = clock();
+
+
+	numbers = { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50 };
+
+	// obtain a time-based seed:  
+	unsigned seed = chrono::system_clock::now().time_since_epoch().count();
+
+	shuffle(numbers.begin(), numbers.end(), default_random_engine(seed));
+
+	cout << "numbers called out: " << endl;
+	fileout << "numbers called out: " << endl;
+
+	//print nos called out
+	for (size_t i = 0; i < 25; i++)
+	{
+		numberscalledout[i] = numbers[i];
+		cout << numberscalledout[i] << ",";
+		fileout << numberscalledout[i] << ",";
+	}
+	cout << endl;
+	fileout << endl;
+
+	//loop of function body
+	for (size_t i = 0; i < iterations; i++)
+	{
+		//resetlines
+		for (size_t i = 0; i < 12; i++)
+		{
+			lines[i] = true;
+		}
+
+		//resethitsheet
+		for (size_t i = 0; i < 25; i++)
+		{
+			hitsheet[i] = false;
+		}
+
+		numbers = { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50 }; //defaultnos
+
+		// obtain a time-based seed:  
+		seed = chrono::system_clock::now().time_since_epoch().count();
+
+		shuffle(numbers.begin(), numbers.end(), default_random_engine(seed));//generate shuffled numbers
+
+		//cout << "Bingo sheet:" << endl;
+
+		//generate bingo sheet
+		for (size_t i = 0; i < 25; i++)
+		{
+			bingosheet[i] = numbers[i];
+			//cout << bingosheet[i] << endl;
+		}
+
+		//generate hitsheet
+		for (size_t i = 0; i < 25; i++)
+		{
+			for (size_t j = 0; j < 25; j++)
+			{
+				if (numberscalledout[i] == bingosheet[j])
+				{
+					hitsheet[j] = true;
+				}
+			}
+		}
+
+		//cout << "hitsheet:" << endl;
+
+		////print hitsheet
+		//for (size_t i = 0; i < 25; i++)
+		//{
+		//	cout << hitsheet[i] << endl;
+		//}
+
+
+		//check for lines
+		//horiozontal
+		for (size_t i = 0; i < 5; i++)
+		{
+			for (size_t j = 0; j < 5; j++)
+			{
+				if (hitsheet[i * 5 + j] == false)
+				{
+					lines[i] = false;
+				}
+			}
+		}
+
+		//vertical
+		for (size_t i = 0; i < 5; i++)
+		{
+			for (size_t j = 0; j < 5; j++)
+			{
+				if (hitsheet[i + j * 5] == false)
+				{
+					lines[i + 5] = false;
+				}
+			}
+		}
+
+		//maindiagonal
+		for (size_t i = 0; i < 5; i++)
+		{
+			if (hitsheet[0 + i * 6] == false)
+			{
+				lines[10] = false;
+			}
+
+		}
+
+		//offdiagonal
+		for (size_t i = 0; i < 5; i++)
+		{
+			if (hitsheet[5 + i * 4] == false)
+			{
+				lines[11] = false;
+			}
+
+		}
+
+		//cout << "lines:" << endl;
+		//cout << i+1 << ") ";
+		//for (size_t i = 0; i < 12; i++)
+		//{
+		//	if (lines[i] == true)
+		//	{
+		//		shaded++;
+		//	}
+		//	//cout << lines[i];
+
+		//	//if (filestream.is_open())
+		//	//{
+		//	//	filestream << lines[i];
+		//	//}
+
+		//	//else cout << "File opening is fail.";
+		//}
+		 //filestream2 << shaded;
+		 //filestream << endl;
+
+		for (size_t k = 0; k < 12; k++)
+		{
+			if (lines[k] == true)
+			{
+				shaded++;
+			}
+		}
+		//cout << shaded;
+
+		 if (shaded >= 5)
+		 {
+			 cout << "bingo" << endl;
+			 bingos++;
+			 fileout << i + 1 << endl;
+
+			 for (size_t i = 0; i < 25; i++)
+			 {
+				 bingo << bingosheet[i] << ",";
+			 }
+			 bingo << endl;
+		 }
+		 shaded = 0;
+	}
+
+	cout << "number of bingos: " << bingos << endl;
+	fileout << "number of bingos: " << bingos << endl;
+
+	
+	probability = double(bingos) / double(iterations);
+	cout << "the probability of getting bingo is: " << fixed << probability << endl;
+	fileout << "the probability of getting bingo is: " << fixed << probability << endl;
+
+
+	double end = clock();
+	double elapsed = double(end - start) / CLOCKS_PER_SEC;
+
+	cout << "time elasped: " << elapsed << " seconds." << endl;
+	fileout << "time elasped: " << elapsed << " seconds." << endl;
+
+	//filestream.close();
+	//filestream2.close();
+	fileout.close();
+	//system("pause");
+	bingo.close();
+	return 0;
+}
